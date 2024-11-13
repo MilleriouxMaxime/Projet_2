@@ -2,10 +2,15 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import os
+import re
+
+def make_filename(name):
+    safe_name = re.sub(r'[<>:"/\\|?*]', '_', name[:15]).strip()
+    return f"{safe_name}.jpg"
 
 
 def get_soup(url):
-        # Envoyer une requête pour récupérer le contenu HTML de la page
+    
     response = requests.get(url)
 
     html_content = response.text
@@ -27,8 +32,11 @@ def extract_book(book_url):
 
     number_available = table[5].string[10:12]
 
-    paragraphes = soup.find_all("p")
-    product_description = paragraphes[-1].string
+    product_div = soup.find('div', id="product_description")
+    if product_div is None:
+        product_description = ""
+    else:
+        product_description = product_div.find_next_sibling().string
 
     category = soup.find_all("li")[2].a.string
 
@@ -66,12 +74,22 @@ def extract_categories():
 
 
 def extract_products(category_url):
-    soup = get_soup(category_url)
-    section = soup.section
-    products_li = section.ol.find_all("li")
     products = []
-    for product in products_li:
-        products.append(f"https://books.toscrape.com/catalogue{product.a["href"][8:]}")
+
+    base_url = category_url.rsplit('/', 1)[0]
+
+    while True:
+        soup = get_soup(category_url)
+        section = soup.section
+        products_li = section.ol.find_all("li")
+    
+        for product in products_li:
+            products.append(f"https://books.toscrape.com/catalogue{product.a["href"][8:]}")
+        
+        if section.find(class_="next") is None:
+            break
+        else:
+            category_url = f"{base_url}/{section.find(class_='next').a['href']}"
 
     return products
         
@@ -80,10 +98,11 @@ def main():
 
     categories = extract_categories()
     all_books = []
-    for category in categories[:5]:
+    for category in categories:
         products = extract_products(category)
-        for product in products[:5]:
+        for product in products:
             all_books.append(extract_book(product))
+        
 
     fieldnames = all_books[0].keys()
     with open('output.csv', mode='w', newline='', encoding='utf-8') as file:
@@ -96,17 +115,11 @@ def main():
 
     for book in all_books:
         url = book["Image URL"]
-        file_name = f"{book["Title"]}.jpg"
+        file_name = make_filename(book["Title"])
         image_path = f"{folder_path}/{file_name}"
-
-        # Create the folder if it doesn't exist
-        
-
-        # Fetch the image and save it to the specified path
         response = requests.get(url)
         with open(image_path, "wb") as file:
             file.write(response.content)
-
 
 
 if __name__ == "__main__":
