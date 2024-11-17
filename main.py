@@ -80,7 +80,7 @@ def extract_categories():
     return results
 
 
-# Récupère les livres dans une catégorie en applicant la pagination (si pas bouton "next" alors STOP, sinon )
+# Récupère les livres dans une catégorie en applicant la pagination (si pas bouton "next" alors STOP, sinon continue sur page suivante)
 def extract_book_urls(category_url):
     products = []
 
@@ -101,7 +101,13 @@ def extract_book_urls(category_url):
 
     return products
         
+# Création d'un dossier pour chaque catégorie
+def create_folder_for_category(category_name):
+    os.makedirs("Library", exist_ok=True)
+    os.makedirs(f"Library/{category_name}", exist_ok=True)
 
+
+# Création d'un fichier CSV -dans le dossier adéquat- pour une catégorie et portant le nom de la catégorie
 def create_csv_for_category(category_name, category_books):
 
     headers = category_books[0].keys()
@@ -110,10 +116,7 @@ def create_csv_for_category(category_name, category_books):
         writer.writeheader()
         writer.writerows(category_books)
 
-def create_folder_for_category(category_name):
-    os.makedirs("Library", exist_ok=True)
-    os.makedirs(f"Library/{category_name}", exist_ok=True)
-
+# Création d'un dossier "images" dans le dossier "Library" et création de chaque fichier image lié à la catégorie dans ce dossier
 def create_images_for_category(category_name, category_books):
     folder_path = f"Library/{category_name}/images"
     os.makedirs(folder_path, exist_ok=True)
