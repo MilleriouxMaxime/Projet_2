@@ -30,3 +30,7 @@ Pour lancer le script, utiliser la commande suivante :
 ```
 python main.py
 ```
+
+# Resultats
+
+Le script va créer un dossier "Library" dans lequel pourront être trouvés, un dossier pour chaque catégorie (portant son nom), dans lequel vous trouverez les images et le fichier csv de la catégorie en question.
